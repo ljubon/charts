@@ -1,0 +1,4 @@
+include:
+  - chart: storm
+    src_path: storm/
+    dst_path: storm/
