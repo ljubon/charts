@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Update gh-pages
+      - name: Publish charts to gh-pages
         run: |  
           RELEASE_TAG=`git branch --show-current | sed 's/githubactions-armada_//'`
           hub pull-request --base "gh-pages" -m "Update Armada Chart to $RELEASE_TAG"
