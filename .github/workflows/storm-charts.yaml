@@ -1,0 +1,58 @@
+
+name: publish-storm
+
+on: 
+  push:
+    paths:
+      - 'storm/**'
+      - '.github/workflow-run-inputs.yaml'
+    tags:
+      - '*'
+
+jobs:
+
+  publish-charts:
+    name: Publish charts
+    runs-on: ubuntu-20.04
+    steps:
+      - id: checkout-default
+        uses: actions/checkout@v2
+
+      - name: Install Step
+        env: 
+          VERSION: 0.15.16
+        run: |
+          curl -sLO https://github.com/smallstep/cli/releases/download/v${VERSION}/step-cli_${VERSION}_amd64.deb
+          sudo dpkg -i step-cli_${VERSION}_amd64.deb
+          rm step-cli_${VERSION}_amd64.deb
+
+      - name: Acquire access token
+        id: token
+        env: 
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_PEM: ${{ secrets.GH_APP_PEM }}
+          INSTALLATION_ID: ${{ secrets.INSTALLATION_ID }}
+        run: |
+          echo "$APP_PEM" > key.pem
+          trap "rm -f key.pem" EXIT
+          APP_TOKEN=$(step crypto jwt sign --key key.pem --issuer $APP_ID --expiration $(date --date '+5 min' +'%s') --subtle </dev/null)
+          ACCESS_TOKEN=$(curl -s -X POST -H "Accept: application/vnd.github.v3+json" -H "Authorization:Bearer $APP_TOKEN" https://api.github.com/app/installations/$INSTALLATION_ID/access_tokens | jq -r '.token')
+          echo "::set-output name=token::$ACCESS_TOKEN"
+
+      - name: Parse workflow inputs
+        id: convert-yaml
+        run: |
+          JSON=$(yq -o=json '.' .github/workflow-run-inputs.yaml | jq -c . | jq -R .)
+          echo "::set-output name=repo_chart::$JSON"
+
+      - name: Publish chart
+        env: 
+          GITHUB_TOKEN: ${{ steps.token.outputs.token }}
+          REPO: ${{ github.repository }} # Repository from where we want to build Charts
+          REPO_REF: ${{ github.ref_name }} # The branch/tag that triggered the workflow
+          REPO_CHART: ${{ steps.convert-yaml.outputs.repo_chart }} # Parsed workflow-run-inputs.yaml file
+        run: |
+          gh workflow run publish-charts.yaml --repo ljubon/charts \
+            --field repo=${{ env.REPO }} \
+            --field repo_ref=${{ env.REPO_REF }} \
+            --field repo_chart=${{ env.REPO_CHART }}
