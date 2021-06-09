@@ -1,0 +1,19 @@
+name: Charts
+
+on: 
+  push:
+    branches:
+      - 'githubactions-armada_*'
+
+jobs:
+  update-gh-pages:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Update gh-pages
+        run: |  
+          RELEASE_TAG=`git branch --show-current | sed 's/githubactions-armada_//'`
+          hub pull-request --base "gh-pages" -m "Update Armada Chart to $RELEASE_TAG"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
