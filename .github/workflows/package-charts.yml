@@ -1,0 +1,33 @@
+name: master
+
+on:
+  push:
+    paths:
+      - 'src/**'
+
+jobs:
+  update-gh-pages:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Package charts
+        run: |
+          helm package storm -d ./storm
+
+      - name: Publish packages to gh-pages
+        run: |
+          echo "${{ secrets.CLONE_KEY }}" > id_rsa
+          chmod 400 id_rsa
+
+          git remote -v
+          git fetch --all
+          echo "Checkout branch "
+          git checkout gh-pages
+          
+          git add storm/storm*.tgz
+          git -c user.name="Ljubo Nikolic" -c user.email="ljubonikolic@gmail.com" commit -qam "Pushing new helm charts"
+          ssh-agent bash -c 'ssh-add id_rsa; git push -q origin HEAD'
+          echo "Remove key..." && rm -fv id_rsa
