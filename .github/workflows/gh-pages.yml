@@ -3,7 +3,7 @@ name: gh-pages
 on: 
   push:
     branches:
-      - 'gh-pages'
+      - gh-pages
       - 'githubactions-armada_*'
       
 jobs:
