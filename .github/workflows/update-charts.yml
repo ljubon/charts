@@ -22,7 +22,8 @@ jobs:
 
       - name: Update gh-pages
         if: contains('master-update_', github.ref)
-        run: |  
+        run: |
+          helm repo index .
           hub pull-request --base "gh-pages" -m "Update Charts"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
