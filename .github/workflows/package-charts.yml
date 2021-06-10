@@ -10,29 +10,25 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Package charts
         run: |
           helm package storm -d ./storm/charts
         working-directory: ./src
 
-      - name: Add new packages
+      - name: Publish packages to gh-pages
         run: |
           echo "${{ secrets.CLONE_KEY }}" > id_rsa
           chmod 400 id_rsa
 
           git remote -v
-          echo "Create branch: master-update_${GITHUB_SHA}"
-          git checkout -b master-update_${GITHUB_SHA} 
+          git fetch --all
+          echo "Checkout branch "
+          git checkout gh-pages
           
           git add ./src/storm/charts
           git -c user.name="Ljubo Nikolic" -c user.email="ljubonikolic@gmail.com" commit -qam "Pushing new helm charts"
           ssh-agent bash -c 'ssh-add id_rsa; git push -q origin HEAD'
           echo "Remove key..." && rm -fv id_rsa
-
-      - name: Publish packages to gh-pages
-        run: |  
-          RELEASE_TAG=`git branch --show-current | sed 's/githubactions-armada_//'`
-          hub pull-request --base "gh-pages" -m "Update Armada Chart to $RELEASE_TAG"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
