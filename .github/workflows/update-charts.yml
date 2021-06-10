@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Update gh-pages - Armada
-        if: contains('githubactions-armada_', github.ref)
+        if: ${{ github.ref, 'githubactions-armada_' }}
         run: |  
           RELEASE_TAG=`git branch --show-current | sed 's/githubactions-armada_//'`
           hub pull-request --base "gh-pages" -m "Update Armada Chart to $RELEASE_TAG"
@@ -21,8 +21,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update gh-pages
-        if: contains('master-update_', github.ref)
-        run: |  
+        if: ${{ github.ref, 'master-update_' }}
+        run: |
+          helm repo index .
           hub pull-request --base "gh-pages" -m "Update Charts"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
