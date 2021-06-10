@@ -3,7 +3,7 @@ name: master
 on:
   push:
     paths:
-      - 'src/**'
+      - 'storm/**'
 
 jobs:
   update-gh-pages:
@@ -15,8 +15,7 @@ jobs:
 
       - name: Package charts
         run: |
-          helm package storm -d ./storm/charts
-        working-directory: ./src
+          helm package storm -d ./storm
 
       - name: Publish packages to gh-pages
         run: |
@@ -24,11 +23,10 @@ jobs:
           chmod 400 id_rsa
 
           git remote -v
-          git fetch --all
           echo "Checkout branch "
           git checkout gh-pages
           
-          git add ./src/storm/charts
+          git add storm/storm*.tgz
           git -c user.name="Ljubo Nikolic" -c user.email="ljubonikolic@gmail.com" commit -qam "Pushing new helm charts"
           ssh-agent bash -c 'ssh-add id_rsa; git push -q origin HEAD'
           echo "Remove key..." && rm -fv id_rsa
