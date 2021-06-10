@@ -21,18 +21,14 @@ jobs:
         run: |
           echo "${{ secrets.CLONE_KEY }}" > id_rsa
           chmod 400 id_rsa
-
           git remote -v
-          echo "Checkout branch "
+
           git checkout gh-pages
-
-
-          message=$(git log -1 --pretty=format:"%B")
           helm repo index .
           git diff index.yaml
           git add index.yaml
           git add storm/storm*.tgz
 
-          git -c user.name="Ljubo Nikolic" -c user.email="ljubonikolic@gmail.com" commit -qam "$message"
-          ssh-agent bash -c 'ssh-add id_rsa; git push -q origin HEAD'
+          git -c user.name="Ljubo Nikolic" -c user.email="ljubonikolic@gmail.com" commit -qam "Update charts"
+          ssh-agent bash -c 'ssh-add id_rsa; git push -q origin gh-pages'
           echo "Remove key..." && rm -fv id_rsa
