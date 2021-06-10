@@ -3,7 +3,7 @@ name: master
 on:
   push:
     paths:
-      - 'src/**'
+      - 'storm/**'
 
 jobs:
   update-gh-pages:
@@ -23,11 +23,16 @@ jobs:
           chmod 400 id_rsa
 
           git remote -v
-          git fetch --all
           echo "Checkout branch "
           git checkout gh-pages
-          
+
+
+          message=$(git log -1 --pretty=format:"%B")
+          helm repo index .
+          git diff index.yaml
+          git add index.yaml
           git add storm/storm*.tgz
-          git -c user.name="Ljubo Nikolic" -c user.email="ljubonikolic@gmail.com" commit -qam "Pushing new helm charts"
+
+          git -c user.name="Ljubo Nikolic" -c user.email="ljubonikolic@gmail.com" commit -qam "$message"
           ssh-agent bash -c 'ssh-add id_rsa; git push -q origin HEAD'
           echo "Remove key..." && rm -fv id_rsa
