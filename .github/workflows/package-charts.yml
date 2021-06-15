@@ -1,9 +1,10 @@
 name: master
 
-on:
+on:  
   push:
     paths:
       - 'storm/**'
+
 
 jobs:
   update-gh-pages:
@@ -17,11 +18,10 @@ jobs:
         run: |
           helm package storm -d ./storm
 
-      - name: Publish packages to gh-pages
+      - name: Open PR for updated charts and index.yml
         run: |
-          echo "${{ secrets.CLONE_KEY }}" > id_rsa
-          chmod 400 id_rsa
-          git remote -v
+          echo "${{ secrets.CLONE_KEY }}" > id_rsa && chmod 400
+          trap "rm -f key.pem" EXIT
 
           git checkout gh-pages
           helm repo index .
@@ -31,4 +31,3 @@ jobs:
 
           git -c user.name="Ljubo Nikolic" -c user.email="ljubonikolic@gmail.com" commit -qam "Update charts"
           ssh-agent bash -c 'ssh-add id_rsa; git push -q origin gh-pages'
-          echo "Remove key..." && rm -fv id_rsa
