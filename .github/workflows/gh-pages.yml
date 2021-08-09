@@ -33,7 +33,7 @@ jobs:
   update-armada-charts:
     if: ${{ github.event.inputs.project == 'ljubon/armada' }}
     runs-on: ubuntu-20.04
-    name: Publish Armada charts - ${{ github.event.inputs.ref }}
+    name: Publish Armada charts
     steps:
       - uses: actions/checkout@v2 # Checkout Charts
       - uses: actions/checkout@v2 # Checkout Armada
@@ -54,6 +54,7 @@ jobs:
           helm package deployment/executor-cluster-monitoring/ -d ../../armada/
           helm package deployment/lookout/ -d ../../armada/
           helm package deployment/lookout-migration/ -d ../../armada/
+          helm package deployment/binoculars/ -d ../../armada/
           helm repo index ../../
         working-directory: ./${{ github.event.inputs.project }}
 

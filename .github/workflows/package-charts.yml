@@ -20,7 +20,7 @@ jobs:
 
       - name: Open PR for updated charts and index.yml
         run: |
-          echo "${{ secrets.CLONE_KEY }}" > id_rsa && chmod 400
+          echo "${{ secrets.CLONE_KEY }}" > id_rsa && chmod 400 id_rsa
           trap "rm -f key.pem" EXIT
 
           git checkout gh-pages
