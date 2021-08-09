@@ -68,6 +68,6 @@ jobs:
           git remote -v
           git branch
 
-          git add ./armada
+          git add ./armada index.yaml
           git -c user.name="Ljubo Nikolic" -c user.email="ljubonikolic@gmail.com" commit -qam "Pushing new helm charts at version ${{ github.event.inputs.ref }}"
           ssh-agent bash -c 'ssh-add id_rsa; git push -q origin HEAD'
