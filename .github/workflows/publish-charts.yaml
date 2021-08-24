@@ -9,29 +9,30 @@ on:
       repo_ref:
         description: 'The branch or tag ref that triggered the workflow'
         required: true
-      repo_chart_name:
-        description: 'Chart name'
-        required: true
-      repo_chart_path:
-        description: 'The path inside repo where `Chart.yaml` is located'
+      repo_chart:
+        description: 'Object with source, destion and chart name'
         required: true
 
 env:
   REPO: ${{ github.event.inputs.repo }}
   REPO_REF: ${{ github.event.inputs.repo_ref }}
-  REPO_CHART_NAME: ${{ github.event.inputs.repo_chart_name }}
-  REPO_CHART_PATH: ${{ github.event.inputs.repo_chart_path }}
 
 jobs:
   publish-charts:
     runs-on: ubuntu-latest
     name: Publish charts
+    continue-on-error: true
+    strategy:
+      max-parallel: 1
+      matrix: ${{ fromJson(github.event.inputs.repo_chart) }}
     steps:
+
       - id: checkout-gh-pages
         uses: actions/checkout@v2 # Checkout Charts - gh-pages
         with:
           ref: 'gh-pages'
           fetch-depth: 0
+
       - id: checkout-helm-src
         uses: actions/checkout@v2 # Checkou Helm source code
         with:
@@ -40,46 +41,42 @@ jobs:
           path: ${{ env.REPO }}
 
       - id: check
-        name: 'Check if ${{ env.REPO_CHART_NAME }}-${{ env.REPO_REF }} already exist'
+        name: 'Check if chart already exist'
         if: ${{ steps.checkout-gh-pages.outcome == 'success' && steps.checkout-helm-src.outcome == 'success' }}
         run: |
-          FILE="${{ env.REPO_CHART_NAME }}/${{ env.REPO_CHART_NAME }}-${{ env.REPO_REF }}.tgz"
-          if [[ -f "$FILE" ]]; then 
-            echo "$FILE already exists." 
+          FILE=$(grep name ${{ env.REPO }}/${{ matrix.src_path }}Chart.yaml | awk '{print $2}')
+          if [[ -f "${{ matrix.dst_path }}$FILE-${{ env.REPO_REF }}.tgz" ]]; then 
+            echo "Chart already exists." 
+            echo "${{ matrix.dst_path }}$FILE-${{ env.REPO_REF }}.tgz"
             exit 1
           else
             echo "File doesn't exist, continue with packaging"
           fi
 
       - id: chart-version
-        name: 'Set chart version - ${{ env.REPO_REF }}'
+        name: 'Set version - ${{ env.REPO_REF }}'
         if: ${{ steps.check.outcome == 'success' }}
         run: |
           find . \( -name "Chart.yaml" -o -name "values.yaml" \) -exec sed -i s/LATEST/${{ env.REPO_REF }}/ {} + 
         working-directory: ./${{ env.REPO }}
 
-      - id: publish
-        name: Package ${{ env.REPO_CHART_NAME }}-${{ env.REPO_REF }}
+      - id: package
+        name: Package ${{ matrix.chart }}-${{ env.REPO_REF }}.tgz
         if: ${{ steps.chart-version.outcome == 'success' && steps.check.outcome == 'success' }}
         run: |
-          helm package ${{ env.REPO_CHART_PATH }} -d ../../${{ env.REPO_CHART_NAME }}
+          helm package ${{ matrix.src_path }} -d ../../${{ matrix.dst_path }}
           helm repo index ../../
-
-          # helm package deployment/executor -d ../../armada/
-          # helm package deployment/executor-cluster-monitoring/ -d ../../armada/
-          # helm package deployment/lookout/ -d ../../armada/
-          # helm package deployment/lookout-migration/ -d ../../armada/
-          # helm package deployment/binoculars/ -d ../../armada/
         working-directory: ./${{ env.REPO }}
 
-      - name: 'Publish ${{ env.REPO_CHART_NAME }}-${{ env.REPO_REF }} chart to gh-pages'
-        if: ${{ steps.publish.outcome == 'success' }}
+      - id: publish
+        name: 'Push ${{ matrix.chart }}-${{ env.REPO_REF }}.tgz to gh-pages'
+        if: ${{ steps.package.outcome == 'success' }}
         run: |
           git config user.name charts-admin
           git config user.email charts@gresearch.io
 
-          git add ${{ env.REPO_CHART_NAME }}/ index.yaml
-          git commit -m "Publish ${{ env.REPO_CHART_NAME }} chart - ${{ env.REPO_REF }}"
+          git add ${{ matrix.dst_path }}/ index.yaml
+          git commit -m "Publish ${{ matrix.chart }}-${{ env.REPO_REF }}.tgz"
           git push origin HEAD 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
