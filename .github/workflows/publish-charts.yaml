@@ -7,15 +7,20 @@ on:
         description: 'Repository from where we want to build Charts'
         required: true
       repo_ref:
-        description: 'The branch or tag ref that triggered the workflow'
+        description: 'The branch/tag that will be used as new version for charts. Usually tag ref'
         required: true
       repo_chart:
-        description: 'Object with source, destion and chart name'
+        description: 'Object with source path, destination path and chart name'
         required: true
+      currentChartVersion:
+        description: 'Chart version set in `Chart.yaml`. Default: `LATEST`'
+        required: false
+        default: 'LATEST'
 
 env:
   REPO: ${{ github.event.inputs.repo }}
   REPO_REF: ${{ github.event.inputs.repo_ref }}
+  CurrentChartVersion: ${{ github.event.inputs.currentChartVersion }}
 
 jobs:
   publish-charts:
@@ -40,25 +45,27 @@ jobs:
           ref: ${{ env.REPO_REF }}
           path: ${{ env.REPO }}
 
+      - id: chart-version
+        name: 'Set version - ${{ env.REPO_REF }}'
+        if: ${{ steps.checkout-gh-pages.outcome == 'success' && steps.checkout-helm-src.outcome == 'success' }}
+        run: |
+          find . \( -name "Chart.yaml" -o -name "values.yaml" \) -exec sed -i s/${{ env.CurrentChartVersion }}/${{ env.REPO_REF }}/ {} + 
+          echo "Replacing ${{ env.CurrentChartVersion }} with new version ${{ env.REPO_REF }}."
+        working-directory: ./${{ env.REPO }}
+
       - id: check
         name: 'Check if chart already exist'
-        if: ${{ steps.checkout-gh-pages.outcome == 'success' && steps.checkout-helm-src.outcome == 'success' }}
+        if: ${{ steps.chart-version.outcome == 'success' }}
         run: |
           FILE=$(grep name ${{ env.REPO }}/${{ matrix.src_path }}Chart.yaml | awk '{print $2}')
           if [[ -f "${{ matrix.dst_path }}$FILE-${{ env.REPO_REF }}.tgz" ]]; then 
             echo "Chart already exists." 
             echo "${{ matrix.dst_path }}$FILE-${{ env.REPO_REF }}.tgz"
+            ls -larth ${{ matrix.dst_path }}
             exit 1
           else
             echo "File doesn't exist, continue with packaging"
           fi
-
-      - id: chart-version
-        name: 'Set version - ${{ env.REPO_REF }}'
-        if: ${{ steps.check.outcome == 'success' }}
-        run: |
-          find . \( -name "Chart.yaml" -o -name "values.yaml" \) -exec sed -i s/LATEST/${{ env.REPO_REF }}/ {} + 
-        working-directory: ./${{ env.REPO }}
 
       - id: package
         name: Package ${{ matrix.chart }}-${{ env.REPO_REF }}.tgz
