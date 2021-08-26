@@ -1,0 +1,88 @@
+name: publish-charts
+
+on:
+  workflow_dispatch:
+    inputs:
+      repo:
+        description: 'Repository from where we want to build Charts'
+        required: true
+      repo_ref:
+        description: 'The branch/tag that will be used as new version for charts. Usually tag ref'
+        required: true
+      repo_chart:
+        description: 'Object with source path, destination path and chart name'
+        required: true
+
+env:
+  REPO: ${{ github.event.inputs.repo }}
+  REPO_REF: ${{ github.event.inputs.repo_ref }}
+
+jobs:
+  publish-charts:
+    runs-on: ubuntu-latest
+    name: Publish charts
+    continue-on-error: true
+    strategy:
+      max-parallel: 1
+      matrix: ${{ fromJson(github.event.inputs.repo_chart) }}
+    steps:
+
+      - id: checkout-gh-pages
+        uses: actions/checkout@v2 # Checkout Charts - gh-pages
+        with:
+          ref: 'gh-pages'
+          fetch-depth: 0
+
+      - id: checkout-helm-src
+        uses: actions/checkout@v2 # Checkout Helm source code
+        with:
+          repository: ${{ env.REPO }}
+          ref: ${{ env.REPO_REF }}
+          path: ${{ env.REPO }}
+
+      - name: Set chart name
+        id: chart-name
+        run: |
+          CHART=${{ matrix.chart }}-${{ env.REPO_REF }}.tgz
+          echo "::set-output name=name::$CHART"
+
+      - name: Check
+        id: check
+        run: |
+          if [[ -f "${{ matrix.dst_path }}/${{ steps.chart-name.outputs.name }}" ]]; then 
+            echo "Chart already exists." 
+            echo "${{ matrix.dst_path }}/${{ steps.chart-name.outputs.name }}"
+            ls -larth ${{ matrix.dst_path }}
+            exit 1
+          fi
+          echo "File ${{ steps.chart-name.outputs.name }} doesn't exist, continue with packaging"
+
+      - name: Set chart version
+        id: chart-version
+        uses: mikefarah/yq@master
+        if: ${{ steps.checkout-gh-pages.outcome == 'success' && steps.checkout-helm-src.outcome == 'success' }}
+        with:
+          cmd: |
+            yq -i '.version = "${{ env.REPO_REF }}"' ${{ matrix.src_path }}/Chart.yaml
+            yq -i '.version = "${{ env.REPO_REF }}"' ${{ matrix.src_path }}/values.yaml
+
+      - name: Package helm chart ${{ steps.chart-name.outputs.name }}
+        id: package
+        if: ${{ steps.chart-version.outcome == 'success' && steps.check.outcome == 'success' }}
+        run: |
+          helm package ${{ matrix.src_path }} -d ../../${{ matrix.dst_path }}
+          helm repo index ../../
+        working-directory: ./${{ env.REPO }}
+
+      - name: 'Publish ${{ steps.chart-name.outputs.name }} to G-Research/charts gh-pages branch'
+        id: publish
+        if: ${{ steps.package.outcome == 'success' }}
+        run: |
+          git config user.name charts-admin
+          git config user.email charts@gresearch.io
+
+          git add ${{ matrix.dst_path }}/ index.yaml
+          git commit -m "Publish ${{ steps.chart-name.outputs.name }}"
+          git push origin HEAD 
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
