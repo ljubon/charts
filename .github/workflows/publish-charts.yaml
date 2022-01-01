@@ -20,7 +20,7 @@ on:
 env:
   REPO: ${{ github.event.inputs.repo }}
   REPO_REF: ${{ github.event.inputs.repo_ref }}
-  CurrentChartVersion: ${{ github.event.inputs.currentChartVersion }}
+  currentChartVersion: ${{ github.event.inputs.currentChartVersion }}
 
 jobs:
   publish-charts:
@@ -49,8 +49,8 @@ jobs:
         name: 'Set version - ${{ env.REPO_REF }}'
         if: ${{ steps.checkout-gh-pages.outcome == 'success' && steps.checkout-helm-src.outcome == 'success' }}
         run: |
-          find . \( -name "Chart.yaml" -o -name "values.yaml" \) -exec sed -i s/${{ env.CurrentChartVersion }}/${{ env.REPO_REF }}/ {} + 
-          echo "Replacing ${{ env.CurrentChartVersion }} with new version ${{ env.REPO_REF }}."
+          find . \( -name "Chart.yaml" -o -name "values.yaml" \) -exec sed -i s/${{ env.currentChartVersion }}/${{ env.REPO_REF }}/ {} + 
+          echo "Replacing ${{ env.currentChartVersion }} with new version ${{ env.REPO_REF }}."
         working-directory: ./${{ env.REPO }}
 
       - id: check
