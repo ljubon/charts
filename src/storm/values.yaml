@@ -91,11 +91,11 @@ persistence:
     # existingClaim:
 
 zookeeper:
-  enabled: true
+  enabled: false
   replicaCount: 1
   # # if using an external zookeeper, you need to set the server names below
-  # servers: 
-  #  - "example.external.zookeeper1"
+  servers: 
+   - "zookeeper.default.svc.cluster.local"
   #  - "example.external.zookeeper2"
   #  - "example.external.zookeeper3"
   # # external server port
