@@ -12,15 +12,10 @@ on:
       repo_chart:
         description: 'Object with source path, destination path and chart name'
         required: true
-      currentChartVersion:
-        description: 'Chart version set in `Chart.yaml`. Default: `LATEST`'
-        required: false
-        default: 'LATEST'
 
 env:
   REPO: ${{ github.event.inputs.repo }}
   REPO_REF: ${{ github.event.inputs.repo_ref }}
-  CurrentChartVersion: ${{ github.event.inputs.currentChartVersion }}
 
 jobs:
   publish-charts:
@@ -49,8 +44,9 @@ jobs:
         name: 'Set version - ${{ env.REPO_REF }}'
         if: ${{ steps.checkout-gh-pages.outcome == 'success' && steps.checkout-helm-src.outcome == 'success' }}
         run: |
-          find . \( -name "Chart.yaml" -o -name "values.yaml" \) -exec sed -i s/${{ env.CurrentChartVersion }}/${{ env.REPO_REF }}/ {} + 
-          echo "Replacing ${{ env.CurrentChartVersion }} with new version ${{ env.REPO_REF }}."
+          yq -i '.version = "${{ env.REPO_REF }}"' ${{ matrix.src_path }}Chart.yaml
+          yq -i '.version = "${{ env.REPO_REF }}"' ${{ matrix.src_path }}values.yaml
+          echo "Chart version: ${{ env.REPO_REF }}."
         working-directory: ./${{ env.REPO }}
 
       - id: check
