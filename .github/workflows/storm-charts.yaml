@@ -15,6 +15,11 @@ jobs:
     if: ${{ startsWith(github.ref, 'refs/tags/') }} # Storm charts are publishied without `v` in front of version
     runs-on: ubuntu-20.04
     steps:
+      - id: checkout-gh-pages
+        uses: actions/checkout@v2
+        with:
+          ref: 'INTERNAL-refactor-master' # TODO CHANGE ME
+
       - name: Install Step
         env: 
           VERSION: 0.15.16
@@ -37,7 +42,9 @@ jobs:
           echo "::set-output name=token::$ACCESS_TOKEN"
 
       - id: convert-yaml
-        run: echo "::set-output name=repo_chart::$(yq -o=json '.' .github/workflow-run-inputs.yaml)"
+        run: |
+          JSON=$(yq -o=json '.' workflow-run-inputs.yaml | jq -c . | jq -R .)
+          echo "::set-output name=repo_chart::$JSON"
 
       - name: Publish chart
         env: 
@@ -46,7 +53,7 @@ jobs:
           REPO_REF: ${{ github.ref_name }} # The branch/tag that triggered the workflow
           REPO_CHART: ${{ steps.convert-yaml.outputs.repo_chart }}
         run: |
-          gh workflow run publish-charts.yaml --repo ljubon/charts --ref gh-pages \
+          gh workflow run publish-charts.yaml --repo ljubon/charts --ref INTERNAL-refactor-master \
             --field repo=${{ env.REPO }} \
             --field repo_ref=${{ env.REPO_REF }} \
             --field repo_chart=${{ env.REPO_CHART }}
