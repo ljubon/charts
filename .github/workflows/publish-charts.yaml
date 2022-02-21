@@ -44,8 +44,8 @@ jobs:
         name: 'Set version - ${{ env.REPO_REF }}'
         if: ${{ steps.checkout-gh-pages.outcome == 'success' && steps.checkout-helm-src.outcome == 'success' }}
         run: |
-          yq -i '.version = "${{ env.REPO_REF }}"' ${{ matrix.src_path }}Chart.yaml
-          yq -i '.version = "${{ env.REPO_REF }}"' ${{ matrix.src_path }}values.yaml
+          yq -i '.version = "${{ env.REPO_REF }}"' ${{ matrix.src_path }}/Chart.yaml
+          yq -i '.version = "${{ env.REPO_REF }}"' ${{ matrix.src_path }}/values.yaml
           echo "Chart version: ${{ env.REPO_REF }}."
         working-directory: ./${{ env.REPO }}
 
@@ -53,10 +53,10 @@ jobs:
         name: 'Check if chart already exist'
         if: ${{ steps.chart-version.outcome == 'success' }}
         run: |
-          FILE=$(grep name ${{ env.REPO }}/${{ matrix.src_path }}Chart.yaml | awk '{print $2}')
-          if [[ -f "${{ matrix.dst_path }}$FILE-${{ env.REPO_REF }}.tgz" ]]; then 
+          FILE=$(grep name ${{ env.REPO }}/${{ matrix.src_path }}/Chart.yaml | awk '{print $2}')
+          if [[ -f "${{ matrix.dst_path }}/$FILE-${{ env.REPO_REF }}.tgz" ]]; then 
             echo "Chart already exists." 
-            echo "${{ matrix.dst_path }}$FILE-${{ env.REPO_REF }}.tgz"
+            echo "${{ matrix.dst_path }}/$FILE-${{ env.REPO_REF }}.tgz"
             ls -larth ${{ matrix.dst_path }}
             exit 1
           else
