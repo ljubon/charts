@@ -36,26 +36,17 @@ jobs:
           ACCESS_TOKEN=$(curl -s -X POST -H "Accept: application/vnd.github.v3+json" -H "Authorization:Bearer $APP_TOKEN" https://api.github.com/app/installations/$INSTALLATION_ID/access_tokens | jq -r '.token')
           echo "::set-output name=token::$ACCESS_TOKEN"
 
+      - id: convert-yaml
+        run: echo "::set-output name=repo_chart::$(yq -o=json '.' .github/workflow-run-inputs.yaml)"
+
       - name: Publish chart
         env: 
           GITHUB_TOKEN: ${{ steps.token.outputs.token }}
-          GH_WORKFLOW: "publish-charts.yaml" # workflow to execute 
-          GH_CHART_REPO: "ljubon/charts" # owner/repo where charts are published 
-          GH_PAGES_BRANCH: "WIP-refactor-gh-pages" # gh-pages
-          REPO: "${{ github.repository }}" # Repository from where we want to build Charts
-          REPO_REF: ${GITHUB_REF##*/} # The branch/tag that triggered the workflow
-          REPO_CHART: |
-            '{
-              "include": [
-                {
-                  "chart": "storm",
-                  "src_path": "storm/",
-                  "dst_path": "storm/"
-                }
-              ]
-            }'
+          REPO: ${{ github.repository }} # Repository from where we want to build Charts
+          REPO_REF: ${{ github.ref_name }} # The branch/tag that triggered the workflow
+          REPO_CHART: ${{ steps.convert-yaml.outputs.repo_chart }}
         run: |
-          gh workflow run ${{ env.GH_WORKFLOW }} --repo ${{ env.GH_CHART_REPO }} --ref ${{ env.GH_PAGES_BRANCH }} \
+          gh workflow run publish-charts.yaml --repo ljubon/charts --ref gh-pages \
             --field repo=${{ env.REPO }} \
             --field repo_ref=${{ env.REPO_REF }} \
             --field repo_chart=${{ env.REPO_CHART }}
