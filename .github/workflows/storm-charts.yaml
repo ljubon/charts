@@ -42,9 +42,8 @@ jobs:
           GH_WORKFLOW: "publish-charts.yaml" # workflow to execute 
           GH_CHART_REPO: "ljubon/charts" # owner/repo where charts are published 
           GH_PAGES_BRANCH: "WIP-refactor-gh-pages" # gh-pages
-          REPO: "ljubon/charts" # Repository from where we want to build Charts
+          REPO: "${{ github.repository }}" # Repository from where we want to build Charts
           REPO_REF: ${GITHUB_REF##*/} # The branch/tag that triggered the workflow
-          CurrentChartVersion: "1.0.11" # Chart version set in `Chart.yaml`. Default: `LATEST`
           REPO_CHART: |
             '{
               "include": [
@@ -59,5 +58,4 @@ jobs:
           gh workflow run ${{ env.GH_WORKFLOW }} --repo ${{ env.GH_CHART_REPO }} --ref ${{ env.GH_PAGES_BRANCH }} \
             --field repo=${{ env.REPO }} \
             --field repo_ref=${{ env.REPO_REF }} \
-            --field currentChartVersion=${{ env.CurrentChartVersion }} \
             --field repo_chart=${{ env.REPO_CHART }}

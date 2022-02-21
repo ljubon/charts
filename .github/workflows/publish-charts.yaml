@@ -46,6 +46,17 @@ jobs:
           CHART=${{ matrix.chart }}-${{ env.REPO_REF }}.tgz
           echo "::set-output name=name::$CHART"
 
+      - id: check
+        name: 'Check if chart already exist'
+        run: |
+          if [[ -f "${{ matrix.dst_path }}/${{ steps.chart-name.outputs.name }}" ]]; then 
+            echo "Chart already exists." 
+            echo "${{ matrix.dst_path }}/${{ steps.chart-name.outputs.name }}"
+            ls -larth ${{ matrix.dst_path }}
+            exit 1
+          fi
+          echo "File ${{ steps.chart-name.outputs.name }} doesn't exist, continue with packaging"
+
       - id: chart-version
         name: 'Set version - ${{ env.REPO_REF }}'
         if: ${{ steps.checkout-gh-pages.outcome == 'success' && steps.checkout-helm-src.outcome == 'success' }}
@@ -54,19 +65,6 @@ jobs:
           yq -i '.version = "${{ env.REPO_REF }}"' ${{ matrix.src_path }}/values.yaml
           echo "Chart version: ${{ env.REPO_REF }}."
         working-directory: ./${{ env.REPO }}
-
-      - id: check
-        name: 'Check if chart already exist'
-        if: ${{ steps.chart-version.outcome == 'success' }}
-        run: |
-          if [[ -f "${{ matrix.dst_path }}/${{ steps.chart-name.outputs.name }}" ]]; then 
-            echo "Chart already exists." 
-            echo "${{ matrix.dst_path }}/${{ steps.chart-name.outputs.name }}"
-            ls -larth ${{ matrix.dst_path }}
-            exit 1
-          fi
-
-          echo "File $FILE doesn't exist, continue with packaging"
 
       - id: package
         name: Package ${{ steps.chart-name.outputs.name }}
