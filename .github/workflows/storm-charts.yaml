@@ -18,7 +18,7 @@ jobs:
       - id: checkout-gh-pages
         uses: actions/checkout@v2
         with:
-          ref: 'INTERNAL-refactor-master' # TODO CHANGE ME
+          ref: 'INTERNAL-refactor-master'
 
       - name: Install Step
         env: 
@@ -43,7 +43,7 @@ jobs:
 
       - id: convert-yaml
         run: |
-          JSON=$(yq -o=json '.' workflow-run-inputs.yaml | jq -c . | jq -R .)
+          JSON=$(yq -o=json '.' .github/workflow-run-inputs.yaml | jq -c . | jq -R .)
           echo "::set-output name=repo_chart::$JSON"
 
       - name: Publish chart
