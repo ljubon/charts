@@ -40,6 +40,12 @@ jobs:
           ref: ${{ env.REPO_REF }}
           path: ${{ env.REPO }}
 
+      - name: Set chart name
+        id: chart-name
+        run: |
+          CHART=${{ matrix.chart }}-${{ env.REPO_REF }}.tgz
+          echo "::set-output name=name::$CHART"
+
       - id: chart-version
         name: 'Set version - ${{ env.REPO_REF }}'
         if: ${{ steps.checkout-gh-pages.outcome == 'success' && steps.checkout-helm-src.outcome == 'success' }}
@@ -53,18 +59,17 @@ jobs:
         name: 'Check if chart already exist'
         if: ${{ steps.chart-version.outcome == 'success' }}
         run: |
-          FILE=$(grep name ${{ env.REPO }}/${{ matrix.src_path }}/Chart.yaml | awk '{print $2}')
-          if [[ -f "${{ matrix.dst_path }}/$FILE-${{ env.REPO_REF }}.tgz" ]]; then 
+          if [[ -f "${{ matrix.dst_path }}/${{ steps.chart-name.outputs.name }}" ]]; then 
             echo "Chart already exists." 
-            echo "${{ matrix.dst_path }}/$FILE-${{ env.REPO_REF }}.tgz"
+            echo "${{ matrix.dst_path }}/${{ steps.chart-name.outputs.name }}"
             ls -larth ${{ matrix.dst_path }}
             exit 1
-          else
-            echo "File doesn't exist, continue with packaging"
           fi
 
+          echo "File $FILE doesn't exist, continue with packaging"
+
       - id: package
-        name: Package ${{ matrix.chart }}-${{ env.REPO_REF }}.tgz
+        name: Package ${{ steps.chart-name.outputs.name }}
         if: ${{ steps.chart-version.outcome == 'success' && steps.check.outcome == 'success' }}
         run: |
           helm package ${{ matrix.src_path }} -d ../../${{ matrix.dst_path }}
@@ -72,14 +77,14 @@ jobs:
         working-directory: ./${{ env.REPO }}
 
       - id: publish
-        name: 'Push ${{ matrix.chart }}-${{ env.REPO_REF }}.tgz to gh-pages'
+        name: 'Push ${{ steps.chart-name.outputs.name }} to gh-pages'
         if: ${{ steps.package.outcome == 'success' }}
         run: |
           git config user.name charts-admin
           git config user.email charts@gresearch.io
 
           git add ${{ matrix.dst_path }}/ index.yaml
-          git commit -m "Publish ${{ matrix.chart }}-${{ env.REPO_REF }}.tgz"
+          git commit -m "Publish ${{ steps.chart-name.outputs.name }}"
           git push origin HEAD 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
