@@ -1,0 +1,44 @@
+{
+  "ljubon": [
+    {
+      "name": "charts",
+      "refs": [
+        {
+          "ref": "^refs/tags/v\\d+\\.\\d+\\.\\d+",
+          "type": "regex"
+        }
+      ],
+      "helm_charts": [
+        {
+          "name": "storm",
+          "source": "storm",
+          "destination": "storm",
+          "use_ref_as_version": {
+            "pattern": "^refs/tags/v",
+            "replacement": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "playground",
+      "refs": [
+        {
+          "ref": "^refs/tags/v\\d+\\.\\d+\\.\\d+",
+          "type": "regex"
+        }
+      ],
+      "helm_charts": [
+        {
+          "name": "storm",
+          "source": "deployment",
+          "destination": "playground",
+          "use_ref_as_version": {
+            "pattern": "^refs/tags/v",
+            "replacement": ""
+          }
+        }
+      ]
+    }
+  ]
+}
