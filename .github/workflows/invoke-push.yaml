@@ -1,0 +1,40 @@
+name: Invoke Push
+
+on:
+  workflow_call:
+    secrets:
+      APP_ID:
+        description: 'The ID of the GitHub App that can trigger a workflow on this repo'
+        required: true
+      APP_PRIVATE_KEY:
+        description: 'The private key of the GitHub App that can trigger a workflow on this repo'
+        required: true
+
+jobs:
+  invoke-push:
+    runs-on: ubuntu-latest
+    environment: invoke-push
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - run: npm i @octokit/auth-app @octokit/request
+      - name: Generate token
+        id: token
+        uses: actions/github-script@v6
+        env:
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.GH_APP_PEM }}
+          APP_CLIENT_ID: ${{ secrets.GH_APP_PEM }}
+          APP_CLIENT_SECRET: ${{ secrets.GH_APP_PEM }}
+        with:
+          result-encoding: string
+          script: |
+            const script = require('./.github/workflows/scripts/generateToken.js')
+            return await script()
+
+      - name: Trigger push workflow
+        env:
+          GITHUB_TOKEN: ${{steps.token.outputs.result}}
+        run: gh workflow run push.yaml --repo ljubon/charts --ref INTERNAL-master -f owner=${{ github.event.repository.owner.login }} -f repo=${{ github.event.repository.name }} -f ref=${{ github.ref }}

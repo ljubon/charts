@@ -1,0 +1,106 @@
+name: Push
+
+on:
+  # When a chart source has changed locally
+  push:
+    branches:
+      - INTERNAL-master
+    tags:
+      - '*'
+  #   paths:
+  #   - 'storm/Chart.yaml'
+  # # When this workflow is invoked by another repo
+  # workflow_dispatch:
+  #   inputs:
+  #     owner:
+  #       description: "The owner of the repo who initialized this workflow"
+  #       required: true
+  #       type: string
+  #     repo:
+  #       description: "The repository name which wants to publish the chart"
+  #       required: true
+  #       type: string
+  #     ref:
+  #       description: "Branch name or tag which will be used for chart version"
+  #       required: true
+  #       type: string
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    environment: push
+    steps:
+      - name: Checkout self
+        uses: actions/checkout@v3
+        with:
+          path: self
+
+      - name: Lookup and validate repo config
+        id: config
+        uses: actions/github-script@v6
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+        with:
+          result-encoding: json
+          script: |
+            const config = require('./self/.github/workflows/scripts/validateChart.js')
+            return await config({ core })
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v3
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Checkout $OWNER/$REPO
+        uses: actions/checkout@v3
+        with:
+          repository: $OWNER/$REPO
+          ref: $REF
+          path: source
+
+      - name: Package charts
+        uses: actions/github-script@v6
+        id: helm
+        with:
+          script: |
+            const owner = process.env.OWNER
+            const repo = process.env.REPO
+            const ref = process.env.REF
+
+            console.log(owner, repo, ref)
+
+      # - name: Update index
+      #   working-directory: gh-pages
+      #   run: |
+      #     helm repo index .
+      #     git add index.yaml
+
+      # - uses: actions/setup-node@v2
+      #   with:
+      #     node-version: 16
+      # - run: npm i @octokit/auth-app @octokit/request
+      # - name: Generate token
+      #   id: token
+      #   uses: actions/github-script@v6
+      #   env:
+      #     APP_ID: ${{ secrets.APP_ID }}
+      #     APP_PRIVATE_KEY: ${{ secrets.GH_APP_PEM }}
+      #     APP_CLIENT_ID: ${{ secrets.GH_APP_PEM }}
+      #     APP_CLIENT_SECRET: ${{ secrets.GH_APP_PEM }}
+      #   with:
+      #     result-encoding: string
+      #     script: |
+      #       const script = require('./.github/workflows/scripts/generateToken.js')
+      #       return await script()
+
+      # - name: Commit and push changes
+      #   working-directory: gh-pages
+      #   run: |
+      #     token=$(echo -n "x-access-token:${{ steps.token.outputs.token}}" | base64)
+      #     git config --local --unset-all http.https://github.com/.extraheader
+      #     git config --local http.https://github.com/.extraheader "AUTHORIZATION: basic $token"
+      #     git config --local user.name "G-Research charts"
+      #     git config --local user.email charts@gr-oss.io
+      #     git commit -m "Publish helm chart ${{ steps.inputs.outputs.owner }}/${{ steps.inputs.outputs.repo }}@${{ steps.inputs.outputs.ref }}"
+      #     git push

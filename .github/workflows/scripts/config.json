@@ -1,0 +1,38 @@
+{
+  "ljubon": [
+    {
+      "name": "charts",
+      "refs": [
+        {
+          "ref": "^refs/tags/v\\d+\\.\\d+\\.\\d+",
+          "type": "regex"
+        }
+      ],
+      "helm_charts": [
+        {
+          "source": "deployment/*",
+          "destination": "armada",
+          "use_ref_as_version": {
+            "pattern": "^refs/tags/v",
+            "replacement": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "toyrepo",
+      "refs": [
+        {
+          "ref": "refs/heads/main",
+          "type": "branch"
+        }
+      ],
+      "helm_charts": [
+        {
+          "source": "storm",
+          "destination": "storm"
+        }
+      ]
+    }
+  ]
+}

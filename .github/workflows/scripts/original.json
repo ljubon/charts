@@ -1,0 +1,39 @@
+{
+  "sources": [
+    {
+      "owner": "jgiannuzzi-org",
+      "repo": "toyrepo",
+      "refs": [
+        {
+          "ref": "refs/heads/main"
+        }
+      ],
+      "charts": [
+        {
+          "source": "storm",
+          "destination": "storm"
+        }
+      ]
+    },
+    {
+      "owner": "jgiannuzzi",
+      "repo": "toyrepo2",
+      "refs": [
+        {
+          "ref": "^refs/tags/v\\d+\\.\\d+\\.\\d+",
+          "type": "regex"
+        }
+      ],
+      "charts": [
+        {
+          "source": "deployment/*",
+          "destination": "armada",
+          "use_ref_as_version": {
+            "pattern": "^refs/tags/v",
+            "replacement": ""
+          }
+        }
+      ]
+    }
+  ]
+}
