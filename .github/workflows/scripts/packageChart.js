@@ -1,8 +1,9 @@
-module.exports = async ({ core, glob, exec }) => {
+module.exports = async ({ core, exec }) => {
   const fs = require('fs');
   const checkoutPageDir = "gh-pages"
   const checkoutSourceDir = "source"
   const helmVersionReplaceFiles = ['Chart.yaml', 'values.yaml']
+  // TODO: NOTE: Updating version in Chart.yml and values.yml will work only for Chart.yaml as values.yaml doesn't have version as pointer in json (packageChart.js line 33)
   const changedFiles = []
 
   // Envs are set in  validate chart step
@@ -24,9 +25,16 @@ module.exports = async ({ core, glob, exec }) => {
         return core.setFailed(`Source directory ${checkoutSourceDir}/${chart.source} doesn't exist`);
       }
 
+      // Check if destination folder for chart exists
+      if (!fs.existsSync(`${checkoutPageDir}/${chart.destination}`)) {
+        core.notice(`Destination directory ${checkoutPageDir}/${chart.destination} doesn't exist\nCreating new directory: ${checkoutPageDir}/${chart.destination}`)
+        fs.mkdirSync(`${checkoutPageDir}/${chart.destination}`)
+      }
+
       if (chart.use_ref_as_version) {
         // Update the chart versionx
         const version = helm.ref.replace(new RegExp(chart.use_ref_as_version.pattern), chart.use_ref_as_version.replacement)
+        core.notice(`Packaging the ${chart.name} chart with the version ${version}`)
         try {
           for (const file of helmVersionReplaceFiles) {
             core.debug(`${checkoutSourceDir}/${chart.source}/${file}`)
@@ -37,46 +45,40 @@ module.exports = async ({ core, glob, exec }) => {
           return core.setFailed(`The file ${checkoutSourceDir}/${chart.source}/${file} doesn't exist\n${error}`);
         }
 
-        // Check if destination folder for chart exists
-        if (!fs.existsSync(`${checkoutPageDir}/${chart.destination}`)) {
-          return core.setFailed(`Destination directory ${checkoutPageDir}/${chart.destination} doesn't exist`)
-        }
         await exec.exec('helm', ['package', `${checkoutSourceDir}/${chart.source}`, '-d', `${checkoutPageDir}/${chart.destination}`])
-
-        const helmChart = `${chart.destination}/${chart.name}-${version}.tgz`
-        changedFiles.push(helmChart)
-        core.debug(changedFiles)
+      } else {
+        core.notice(`Packaging the chart ${chart.name}`)
+        await exec.exec('helm', ['package', `${checkoutSourceDir}/${chart.source}`, '-d', `${checkoutPageDir}/${chart.destination}`])
       }
 
-      core.debug(chart)
       await exec.exec('git', ['status'], { cwd: checkoutPageDir })
-      await exec.exec('git', ['add', `${chart.destination}/`], { cwd: checkoutPageDir })
+      // Show other (i.e. untracked) files in the output
+      await exec.exec('git', ['ls-files', '--others', '--exclude-standard'],  {
+        cwd: checkoutPageDir,
+        listeners: { 'stdout': data => { changedFiles.push(data.toString().trim()) }}
+      })
+
+      await exec.exec('git', ['add', `${chart.destination}`], { cwd: checkoutPageDir })
       await exec.exec('git', ['status'], { cwd: checkoutPageDir })
+
+
     }
   } catch (error) {
     console.error(error);
     return core.setFailed(`Unable to update the version and stage files with error: ${error}`)
   }
 
-  // Verify staged git files
-  // Alternative could also be git status -s, and then compare files with changedFiles
-  const gitStatus = [];
-  await exec.exec('git', ['ls-files', '-m'], {
+  let gitStagedFiles = []
+  // Show only modified  files in the output
+  await exec.exec('git', ['diff', '--name-only', '--cached', '--patch-with-raw'], {
     cwd: checkoutPageDir,
-    listeners: {
-      'stdout': data => { gitStatus.push(data.toString()) }
-    }
+    listeners: { 'stdout': data => { gitStagedFiles = data.toString().trim().split('\n') }}
   })
-  // TODO: match file names, not number changed of changed
-  if (gitStatus.length > 0) {
-    return core.setFailed(`Only expected files to be added, but that's not the case: ${gitStatus}`)
+
+  core.notice(gitStagedFiles)
+  core.notice(changedFiles)
+  if (JSON.stringify(gitStagedFiles.sort()) != JSON.stringify(changedFiles.sort())){
+      return core.setFailed(`Only expected files to be added, but that's not the case\n==> Git staged files:${gitStagedFiles}\n==> Changed files:${changedFiles}`)
   }
-  // core.notice(gitStatus)
-  // core.notice(changedFiles)
-  // gitStatus.forEach(file => {
-  //   if (!changedFiles.includes(file)) {
-  //     return core.setFailed(`Only expected files to be added, but that's not the case: ${gitStatus}`)
-  //   }
-  // });
 
 }
