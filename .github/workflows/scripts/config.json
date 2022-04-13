@@ -32,11 +32,7 @@
         {
           "name": "storm",
           "source": "deployment",
-          "destination": "playground",
-          "use_ref_as_version": {
-            "pattern": "^refs/tags/v",
-            "replacement": ""
-          }
+          "destination": "test"
         }
       ]
     }

@@ -64,7 +64,7 @@ jobs:
             const helm = require('./self/.github/workflows/scripts/packageChart.js')
             return await helm({ core, glob, exec })
 
-      - run: npm i octokit fs
+      - run: npm i octokit fs @octokit/request @octokit/core
       - name: Update index and push files
         uses: actions/github-script@v6
         env:
@@ -78,9 +78,12 @@ jobs:
             const tokenPermissions = { contents: "write" }
             try {
               const token = await fetchToken({ core }, 'ljubon', 'charts', tokenPermissions )
-              return await push({ core, exec }, token)
+              return await push({ core, exec, context }, token)
             } catch (error) {
-              core.notice(`Permission: ${tokenPermissions}`)
-              return core.setFailed(`Unable to trigger workflow ljubon/charts, please check token permissions.\n${error}`)
+              core.notice(`Permission: ${JSON.stringify(tokenPermissions)}`)
+              return core.setFailed(`Unable to trigger workflow ${context.payload.repository.owner.login}/${context.payload.repository.name}, please check token permissions.\n${error}`)
             }
+
+            // Splint fetchToken and push in two jobs, goal is to hide headerToken_b64 output
+            // core.setSecret('myPassword');
 

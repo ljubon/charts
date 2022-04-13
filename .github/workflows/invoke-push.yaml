@@ -27,20 +27,18 @@ jobs:
         env: 
           APP_ID: ${{ secrets.APP_ID }} # from workflow_call
           APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }} # from workflow_call
-          OWNER: "ljubon"
-          REPO: "charts"
-          REF: "INTERNAL-master"
-          WORKFLOW_NAME: "Push"
+          OWNER: "ljubon" # TODO: Change to G-Research
+          REPO: "charts" # TODO: Change to charts
+          REF: "INTERNAL-master" # TODO: Change to chart's default branch (master)
+          WORKFLOW_NAME: "Push" # NOTE: Workflow name in chart repo must be named `Push` (push.yaml in this code)
         with:
           script: |
             const generateToken = require('./charts/.github/workflows/scripts/token.js')
             const workflow = require('./charts/.github/workflows/scripts/workflow.js')
-            const tokenPermissions = { workflows: "write", actions: "write" }
+            const tokenPermissions = { workflows: "write", actions: "write", contents: "write" }
             try {
-              // FIXME: change to G-Reserach/charts values
-              // This token will be valid only for repo ljubon/charts
               const token = await generateToken({ core }, process.env.OWNER, process.env.REPO, tokenPermissions )
-              return await workflow({ core, context }, token, process.env.OWNER, process.env.REPO, process.env.REF, process.env.WORKFLOW_NAME )
+              return await workflow({ core, context }, token )
             } catch (error) {
               core.notice(error)
               core.notice(`Permission: ${tokenPermissions}`)
