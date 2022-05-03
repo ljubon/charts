@@ -24,20 +24,15 @@ module.exports = async ({ core, exec, context }, token) => {
     // Update index and stage charts
     await exec.exec('helm', ['repo', 'index', '.'], { cwd: checkoutPageDir })
     await exec.exec('git', ['add', 'index.yaml'], { cwd: checkoutPageDir })
-    for (const chart of helm.charts) {
-      await exec.exec('git', ['add', `${chart.destination}`], { cwd: checkoutPageDir })
-    };
 
     // Commit and push files
     await exec.exec('git', ['status'], { cwd: checkoutPageDir })
     await exec.exec('git', ['commit', '-m', `Publish helm chart to ${context.payload.repository.owner.login}/${context.payload.repository.name}`, '--verbose'], { cwd: checkoutPageDir }) 
     await exec.exec('git', ['push', 'origin', checkoutPageDir, '--verbose'], { cwd: checkoutPageDir })
-
-    // API: https://docs.github.com/en/rest/reference/apps#revoke-an-installation-access-token
-    console.log(`Revoking the token...`)
-    await octokit.request('DELETE /installation/token', {})
-
   } catch (error) {
     return core.setFailed(`Unable to push ${checkoutPageDir}/${helm.charts.destination} to ljubon/charts@${checkoutPageDir}\nError: ${error}`)
-  }
+  } finally {
+    // API: https://docs.github.com/en/rest/reference/apps#revoke-an-installation-access-token
+    console.log(`Revoking the token...`)
+    await octokit.request('DELETE /installation/token', {})  }
 }

@@ -13,9 +13,8 @@ module.exports = async ({ core }, owner, repo, token_permissions) => {
       app.octokit.rest.apps.listInstallations
     )) {
       for (const installation of installations) {
-        if (installation.account.login === owner) { // TODO: will we ever have multiple match? Have app installed in multiple repos..etc
+        if (installation.account.login === owner) {
           const octokit = await app.getInstallationOctokit(installation.id)
-
           try {
             // https://docs.github.com/en/rest/reference/apps#create-an-installation-access-token-for-an-app
             const { data: response } = await octokit.request('POST /app/installations/{installation_id}/access_tokens', {
@@ -27,7 +26,7 @@ module.exports = async ({ core }, owner, repo, token_permissions) => {
             return response.token
 
           } catch (error) {
-            core.notice(`Permissions: ${default_permissions}`)
+            core.notice(`Permissions: ${JSON.stringify(default_permissions)}`)
             core.notice(`Owner/Repo: ${owner}/${repo}`)
             return core.setFailed(`Unable to generate token for ${owner}/${repo} \n${error}`)
           }

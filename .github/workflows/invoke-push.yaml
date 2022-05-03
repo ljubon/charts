@@ -33,7 +33,7 @@ jobs:
           script: |
             const generateToken = require('./charts/.github/workflows/scripts/token.js')
             const workflow = require('./charts/.github/workflows/scripts/workflow.js')
-            const tokenPermissions = { workflows: "write", actions: "write", contents: "write" }
+            const tokenPermissions = { actions: "write" } // required
             try {
               const token = await generateToken({ core }, process.env.OWNER, process.env.REPO, tokenPermissions )
               return await workflow({ core, context }, token )
