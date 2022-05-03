@@ -75,7 +75,7 @@ jobs:
             const fetchToken = require('./self/.github/workflows/scripts/token.js')
             const push = require('./self/.github/workflows/scripts/push.js')
 
-            const tokenPermissions = { contents: "write" }
+            const tokenPermissions = { contents: "write" } // required to push files 
             try {
               const token = await fetchToken({ core }, 'ljubon', 'charts', tokenPermissions )
               return await push({ core, exec, context }, token)
