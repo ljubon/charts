@@ -39,7 +39,6 @@ module.exports = async ({ core, exec }) => {
             core.debug(`${checkoutSourceDir}/${chart.source}/${file}`)
             await exec.exec('yq', ['-i', `.version = "${version}"`, `${checkoutSourceDir}/${chart.source}/${file}`])
             await exec.exec('yq', ['-i', `.appVersion = "${version}"`, `${checkoutSourceDir}/${chart.source}/${file}`])
-            // await exec.exec('yq', ['-i', `'.version="${version}" | .appVersion="${version}" | .tag="${version}"'`, `${checkoutSourceDir}/${chart.source}/${file}`])
           }
         } catch (error) {
           core.notice(`${checkoutSourceDir}/${chart.source}/${file}\n Version: ${version}`)

@@ -83,7 +83,3 @@ jobs:
               core.notice(`Permission: ${JSON.stringify(tokenPermissions)}`)
               return core.setFailed(`Unable to trigger workflow ${context.payload.repository.owner.login}/${context.payload.repository.name}, please check token permissions.\n${error}`)
             }
-
-            // Splint fetchToken and push in two jobs, goal is to hide headerToken_b64 output
-            // core.setSecret('myPassword');
-
