@@ -1,8 +1,9 @@
-module.exports = async ({ core }, owner, repo, tokenPermissions) => {
+module.exports = async ({ core, fetch }, owner, repo, tokenPermissions) => {
   const { App } = require("octokit")
   const app = new App({
     appId: process.env.APP_ID,
     privateKey: process.env.APP_PRIVATE_KEY,
+    request: { fetch: fetch }
   })
 
   const permissions = (tokenPermissions === undefined) ? {
@@ -20,7 +21,8 @@ module.exports = async ({ core }, owner, repo, tokenPermissions) => {
           const { data: response } = await octokit.request('POST /app/installations/{installation_id}/access_tokens', {
             installation_id: installation.id,
             repositories: [`${repo}`],
-            permissions: permissions
+            permissions: permissions,
+            request: { fetch: fetch }
           })
           core.debug(`Response: ${JSON.stringify(response)}`)
           return response.token

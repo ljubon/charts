@@ -3,7 +3,7 @@ name: Push
 on:
   push:
     branches:
-      - master
+      - charts-master
     tags:
       - '*'
     paths:
@@ -71,7 +71,7 @@ jobs:
         uses: actions/github-script@v6
         env:
           APP_ID: ${{ secrets.APP_ID }}
-          APP_PRIVATE_KEY: ${{ secrets.GH_APP_PEM }}
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
         with:
           script: |
             const generateToken = require('./self/.github/workflows/scripts/token.js')
@@ -79,7 +79,7 @@ jobs:
 
             const tokenPermissions = { contents: "write" } // required to push files 
             try {
-              const token = await generateToken({ core }, 'G-Research', 'charts', tokenPermissions )
+              const token = await generateToken({ core, fetch }, 'ljubon', 'charts', tokenPermissions )
               return await push({ core, exec, context }, token)
             } catch (error) {
               core.notice(`Permission: ${JSON.stringify(tokenPermissions)}`)
