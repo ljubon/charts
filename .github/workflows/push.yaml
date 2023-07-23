@@ -3,11 +3,11 @@ name: Push
 on:
   push:
     branches:
-      - master
+      - charts-master
     tags:
       - '*'
     paths:
-    - 'storm/Chart.yaml'
+      - 'storm/Chart.yaml'
   # When this workflow is invoked by another repo
   workflow_dispatch:
     inputs:
@@ -27,18 +27,23 @@ on:
 jobs:
   push:
     runs-on: ubuntu-latest
-    environment: push
     steps:
       - name: Checkout self
         uses: actions/checkout@v3
         with:
           path: self
 
+      - name: Setup Node 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          check-latest: true
+
       - name: Validate chart
-        uses: actions/github-script@v6
+        uses: actions/github-script@v6.4.1
         env:
           APP_ID: ${{ secrets.APP_ID }}
-          APP_PRIVATE_KEY: ${{ secrets.GH_APP_PEM }}
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
         with:
           script: |
             const config = require('./self/.github/workflows/scripts/validateChart.js')
@@ -58,20 +63,20 @@ jobs:
           path: source
 
       - name: Package charts
-        uses: actions/github-script@v6
+        uses: actions/github-script@v6.4.1
         with:
           script: |
             const helm = require('./self/.github/workflows/scripts/packageChart.js')
             return await helm({ core, glob, exec })
 
       - name: Install packages
-        run: npm i octokit fs @octokit/request @octokit/core
+        run: npm i octokit fs @octokit/request @octokit/core @octokit/rest @octokit/app @octokit/auth-app
 
       - name: Update index and push files
-        uses: actions/github-script@v6
+        uses: actions/github-script@v6.4.1
         env:
           APP_ID: ${{ secrets.APP_ID }}
-          APP_PRIVATE_KEY: ${{ secrets.GH_APP_PEM }}
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
         with:
           script: |
             const generateToken = require('./self/.github/workflows/scripts/token.js')
@@ -79,8 +84,9 @@ jobs:
 
             const tokenPermissions = { contents: "write" } // required to push files 
             try {
-              const token = await generateToken({ core }, 'G-Research', 'charts', tokenPermissions )
-              return await push({ core, exec, context }, token)
+              const token = await generateToken({ core, fetch }, 'ljubon', 'charts', tokenPermissions )
+              core.notice(`Token dump: ${JSON.stringify(token)}`)
+              return await push({ core, exec, context, fetch }, token)
             } catch (error) {
               core.notice(`Permission: ${JSON.stringify(tokenPermissions)}`)
               return core.setFailed(`Unable to push ${context.payload.repository.owner.login}/${context.payload.repository.name}, please check token permissions.\n${error}`)

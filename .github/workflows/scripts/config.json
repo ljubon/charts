@@ -1,11 +1,11 @@
 {
-  "G-Research": [
+  "ljubon": [
     {
       "name": "charts",
       "refs": [
         {
           "type": "branch",
-          "ref": "master"
+          "ref": "charts-master"
         }
       ],
       "helm_charts": [
@@ -13,6 +13,23 @@
           "name": "storm",
           "source": "storm",
           "destination": "storm"
+        }
+      ]
+    },
+    {
+      "name": "siembol",
+      "key_fingerprint": "YnF/2TR5qQa/M5CUZRvi/46oGdKxYDCeIxTkq9OOeYA=",
+      "refs": [
+        {
+          "ref": "^refs/tags/v\\d+\\.\\d+\\.\\d+",
+          "type": "regex"
+        }
+      ],
+      "helm_charts": [
+        {
+          "name": "siembol",
+          "source": "deployment/helm-k8s",
+          "destination": "siembol"
         }
       ]
     },
@@ -36,8 +53,8 @@
           }
         },
         {
-          "name": "armada-bundle",
-          "source": "deployment/armada-bundle",
+          "name": "armada-binoculars",
+          "source": "deployment/binoculars",
           "destination": "armada",
           "use_ref_as_version": {
             "pattern": "^refs/tags/v",
@@ -45,8 +62,8 @@
           }
         },
         {
-          "name": "armada-lookout",
-          "source": "deployment/lookout",
+          "name": "armada-event-ingester",
+          "source": "deployment/event-ingester",
           "destination": "armada",
           "use_ref_as_version": {
             "pattern": "^refs/tags/v",
@@ -72,8 +89,8 @@
           }
         },
         {
-          "name": "armada-binoculars",
-          "source": "deployment/binoculars",
+          "name": "armada-jobservice",
+          "source": "deployment/jobservice",
           "destination": "armada",
           "use_ref_as_version": {
             "pattern": "^refs/tags/v",
@@ -81,8 +98,17 @@
           }
         },
         {
-          "name": "armada-lookout-ingester",
-          "source": "deployment/lookout-ingester",
+          "name": "armada-lookout",
+          "source": "deployment/lookout",
+          "destination": "armada",
+          "use_ref_as_version": {
+            "pattern": "^refs/tags/v",
+            "replacement": ""
+          }
+        },
+        {
+          "name": "armada-lookout-v2",
+          "source": "deployment/lookout-v2",
           "destination": "armada",
           "use_ref_as_version": {
             "pattern": "^refs/tags/v",
@@ -99,8 +125,8 @@
           }
         },
         {
-          "name": "armada-jobservice",
-          "source": "deployment/jobservice",
+          "name": "armada-lookout-migration-v2",
+          "source": "deployment/lookout-migration-v2",
           "destination": "armada",
           "use_ref_as_version": {
             "pattern": "^refs/tags/v",
@@ -108,8 +134,35 @@
           }
         },
         {
-          "name": "armada-event-ingester",
-          "source": "deployment/event-ingester",
+          "name": "armada-lookout-ingester",
+          "source": "deployment/lookout-ingester",
+          "destination": "armada",
+          "use_ref_as_version": {
+            "pattern": "^refs/tags/v",
+            "replacement": ""
+          }
+        },
+        {
+          "name": "armada-lookout-ingester-v2",
+          "source": "deployment/lookout-ingester-v2",
+          "destination": "armada",
+          "use_ref_as_version": {
+            "pattern": "^refs/tags/v",
+            "replacement": ""
+          }
+        },
+        {
+          "name": "armada-scheduler-migration",
+          "source": "deployment/scheduler-migration",
+          "destination": "armada",
+          "use_ref_as_version": {
+            "pattern": "^refs/tags/v",
+            "replacement": ""
+          }
+        },
+        {
+          "name": "armada-scheduler",
+          "source": "deployment/scheduler",
           "destination": "armada",
           "use_ref_as_version": {
             "pattern": "^refs/tags/v",
@@ -119,8 +172,8 @@
       ]
     },
     {
-      "name": "siembol",
-      "key_fingerprint": "YnF/2TR5qQa/M5CUZRvi/46oGdKxYDCeIxTkq9OOeYA=",
+      "name": "armada-operator",
+      "key_fingerprint": "94XvtZCWeQVV8ofBFFM7jhnCiFZ2AnIlRGRaN8Sjrcc=",
       "refs": [
         {
           "ref": "^refs/tags/v\\d+\\.\\d+\\.\\d+",
@@ -129,9 +182,13 @@
       ],
       "helm_charts": [
         {
-          "name": "siembol",
-          "source": "deployment/helm-k8s",
-          "destination": "siembol"
+          "name": "armada-operator",
+          "source": "charts/armada-operator",
+          "destination": "armada",
+          "use_ref_as_version": {
+            "pattern": "^refs/tags/v",
+            "replacement": ""
+          }
         }
       ]
     }

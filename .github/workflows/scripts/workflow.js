@@ -1,10 +1,10 @@
-module.exports = async ({ core, context }, token) => {
+module.exports = async ({ core, context, fetch }, token) => {
   const { Octokit } = require("@octokit/core")
-  const octokit = new Octokit({ auth: token })
+  const octokit = new Octokit({ auth: token, request: { fetch: fetch } }); 
 
-  const owner = 'G-Research'
+  const owner = 'ljubon'
   const repo = 'charts'
-  const ref = 'master'
+  const ref = 'charts-master'
   const workflow_name = 'Push'
 
   const { data: repo_workflows } = await octokit.request('GET /repos/{owner}/{repo}/actions/workflows', {
