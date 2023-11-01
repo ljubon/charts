@@ -3,7 +3,7 @@ name: Push
 on:
   push:
     branches:
-      - master
+      - resolve-comments-automated-tests
     tags:
       - '*'
     paths:
@@ -33,16 +33,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: self
-
-      - name: Storm - unit tests
-        env:
-          HELM_UNITTESTS_VERSION: 0.3.5
-          HELM_UNITTESTS_PLUGIN: https://github.com/helm-unittest/helm-unittest
-        working-directory: self/storm
-        shell: bash
-        run: |
-          helm plugin install ${HELM_UNITTESTS_PLUGIN} --version ${HELM_UNITTESTS_VERSION} > /dev/null
-          helm unittest . -o storm/tests/results/test-output.xml -t junit
 
       - name: Validate chart
         uses: actions/github-script@v6

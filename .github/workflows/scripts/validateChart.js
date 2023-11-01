@@ -23,6 +23,7 @@ module.exports = async ({ core, context }) => {
       const regex = new RegExp(r.ref)
       return regex.test(input.ref)
     } else if (r.type === "branch") {
+      core.notice(`refs/heads/${r.ref} must be equal ${input.ref}`)
       return `refs/heads/${r.ref}` === input.ref
     }
   })
