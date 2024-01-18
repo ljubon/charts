@@ -1,6 +1,26 @@
 {
   "G-Research": [
     {
+      "name": "fasttrackml",
+      "refs": [
+        {
+          "ref": "^refs/tags/v\\d+\\.\\d+\\.\\d+",
+          "type": "regex"
+        },
+        {
+          "type": "branch",
+          "ref": "master"
+        }
+      ],
+      "helm_charts": [
+        {
+          "name": "fasttrackml",
+          "source": "chart",
+          "destination": "fasttrackml"
+        }
+      ]
+    },
+    {
       "name": "charts",
       "refs": [
         {
