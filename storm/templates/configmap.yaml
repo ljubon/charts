@@ -6,7 +6,6 @@ metadata:
     chart: {{ template "storm.chart" $ }}
     release: {{ $.Release.Name }}
     heritage: {{ $.Release.Service }}
-    test: test
 data:
   storm.yaml: |-
     storm.zookeeper.servers:
