@@ -5,6 +5,7 @@ metadata:
   name: application
   labels:
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    test: test
   annotations:
     "helm.sh/hook": pre-install
     "helm.sh/hook-weight": "1"
