@@ -49,16 +49,16 @@ cleanupApplication:
     tag: 0.1.1
 credentials:
   application:
-    administrativeEmail: null
-    administrativePassword: null
-    administrativeUser: null
-    key: null
+    administrativeEmail: 'example@test.com'
+    administrativePassword: 'secret'
+    administrativeUser: 'default'
+    key: 'dummyValue'
   mysql:
-    password: null
-    rootPassword: null
-    user: null
+    password: 'secret'
+    rootPassword: 'rootSecret'
+    user: 'default'
   redis:
-    password: null
+    password: 'secret'
 librenmsServices:
   global: {}
   memcached:

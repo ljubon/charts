@@ -4,3 +4,8 @@ description: LibreNMS
 name: librenms
 type: application
 version: 0.1.2
+icon: https://avatars.githubusercontent.com/u/5791783?s=200&v=4
+dependencies:
+  - name: librenmsServices
+    version: 0.1.0
+    repository: "file://charts/librenmsServices"
