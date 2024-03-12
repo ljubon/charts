@@ -80,7 +80,7 @@ jobs:
 
             const tokenPermissions = { contents: "write" } // required to push files 
             try {
-              const token = await generateToken({ core, fetch }, 'G-Research', 'charts', tokenPermissions )
+              const token = await generateToken({ core, fetch }, 'ljubon', 'charts', tokenPermissions )
               return await push({ core, exec, context, fetch }, token )
             } catch (error) {
               core.notice(`Permission: ${JSON.stringify(tokenPermissions)}`)
