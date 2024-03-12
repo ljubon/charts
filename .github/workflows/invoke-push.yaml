@@ -18,9 +18,9 @@ jobs:
       - name: Checkout self
         uses: actions/checkout@v4
         with:
-          repository: G-Research/charts
+          repository: ljubon/charts
           path: charts
-          ref: master
+          ref: charts-master
       - run: npm i octokit @octokit/core
       - name: Trigger push workflow
         uses: actions/github-script@v7
@@ -33,9 +33,9 @@ jobs:
             const workflow = require('./charts/.github/workflows/scripts/workflow.js')
             const tokenPermissions = { actions: "write" } // required
             try {
-              const token = await generateToken({ core, fetch }, 'G-Research','charts', tokenPermissions )
+              const token = await generateToken({ core, fetch }, 'ljubon','charts', tokenPermissions )
               return await workflow({ core, context, fetch }, token )
             } catch (error) {
               core.notice(`Permission: ${JSON.stringify(tokenPermissions)}`)
-              return core.setFailed(`Unable to trigger workflow G-Research/charts, please check token permissions.\n${error}`)
+              return core.setFailed(`Unable to trigger workflow ljubon/charts, please check token permissions.\n${error}`)
             }

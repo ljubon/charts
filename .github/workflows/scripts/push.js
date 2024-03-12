@@ -22,7 +22,7 @@ module.exports = async ({ core, exec, context, fetch }, token) => {
     await exec.exec('git', ['status'], { cwd: checkoutPageDir })
     await exec.exec('git', ['config', '--local', '--unset-all', 'http.https://github.com/.extraheader'], { cwd: checkoutPageDir })
     await exec.exec('git', ['config', '--local', 'http.https://github.com/.extraheader', `AUTHORIZATION: basic ${headerToken_b64}`], { cwd: checkoutPageDir })
-    await exec.exec('git', ['config', '--local', 'user.name', 'G-Research charts'], { cwd: checkoutPageDir })
+    await exec.exec('git', ['config', '--local', 'user.name', 'ljubon charts'], { cwd: checkoutPageDir })
     await exec.exec('git', ['config', '--local', 'user.email', 'charts@gr-oss.io'], { cwd: checkoutPageDir })
 
     await exec.exec('helm', ['repo', 'index', '.'], { cwd: checkoutPageDir })
@@ -32,7 +32,7 @@ module.exports = async ({ core, exec, context, fetch }, token) => {
     await exec.exec('git', ['commit', '-m', `Publish helm chart with version ${helm.ref} to ${context.payload.repository.owner.login}/${context.payload.repository.name}`, '--verbose'], { cwd: checkoutPageDir })
     await exec.exec('git', ['push', 'origin', branchName, '--verbose'], { cwd: checkoutPageDir })
   } catch (error) {
-    return core.setFailed(`Unable to push ${checkoutPageDir}/${helm.charts.destination} to G-Research/charts@${branchName}\nError: ${error}`)
+    return core.setFailed(`Unable to push ${checkoutPageDir}/${helm.charts.destination} to ljubon/charts@${branchName}\nError: ${error}`)
   } finally {
     // API: https://docs.github.com/en/rest/reference/apps#revoke-an-installation-access-token
     core.notice('Revoking the token...')
